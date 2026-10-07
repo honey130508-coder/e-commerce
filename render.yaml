@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: apexstore-ecommerce
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn ecommerce_store.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "True"
+      - key: ALLOWED_HOSTS
+        value: "*"
