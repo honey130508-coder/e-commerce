@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.order_number }} - ApexStore{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 32px auto 64px;">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{% url 'store:product_list' %}">Home</a>
+    <span>/</span>
+    <a href="{% url 'accounts:orders_history' %}">My Orders</a>
+    <span>/</span>
+    <span style="color: var(--text-main); font-weight: 500;">Order #{{ order.order_number }}</span>
+  </nav>
+
+  <div class="history-card" style="padding: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h1 style="font-size: 1.6rem; font-weight: 800;">Order #{{ order.order_number }}</h1>
+        <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">
+          Placed on {{ order.created_at|date:"F d, Y, g:i A" }}
+        </div>
+      </div>
+      <div>
+        <span class="status-pill status-{{ order.status|lower }}">{{ order.status }}</span>
+      </div>
+    </div>
+
+    <!-- Info Sections -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+      <div>
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">Delivery Address</h3>
+        <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
+          <strong>{{ order.full_name }}</strong><br>
+          {{ order.address }}<br>
+          {{ order.city }}, {{ order.state }} {{ order.postal_code }}<br>
+          {{ order.country }}<br>
+          Phone: {{ order.phone }}
+        </p>
+      </div>
+
+      <div>
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">Payment &amp; Customer</h3>
+        <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
+          <strong>Payment Method:</strong> {{ order.payment_method }}<br>
+          <strong>Email:</strong> {{ order.email }}<br>
+          <strong>Account:</strong> {% if order.user %}{{ order.user.username }}{% else %}Guest Checkout{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 16px;">Items in this Order</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border-color); text-align: left; font-size: 0.85rem; color: var(--text-muted);">
+          <th style="padding: 10px 0;">Item</th>
+          <th style="padding: 10px; text-align: right;">Unit Price</th>
+          <th style="padding: 10px; text-align: center;">Qty</th>
+          <th style="padding: 10px 0; text-align: right;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+          <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.95rem;">
+            <td style="padding: 14px 0;">
+              <strong>{{ item.product_name }}</strong>
+            </td>
+            <td style="padding: 14px; text-align: right; color: var(--text-muted);">${{ item.product_price }}</td>
+            <td style="padding: 14px; text-align: center; font-weight: 600;">{{ item.quantity }}</td>
+            <td style="padding: 14px 0; text-align: right; font-weight: 700;">${{ item.line_total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="padding-top: 14px; text-align: right; color: var(--text-muted);">Subtotal:</td>
+          <td style="padding-top: 14px; text-align: right; font-weight: 600;">${{ order.subtotal }}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding-top: 6px; text-align: right; color: var(--text-muted);">Shipping:</td>
+          <td style="padding-top: 6px; text-align: right; font-weight: 600;">
+            {% if order.shipping_cost == 0 %}FREE{% else %}${{ order.shipping_cost }}{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding-top: 6px; text-align: right; color: var(--text-muted);">Tax (8%):</td>
+          <td style="padding-top: 6px; text-align: right; font-weight: 600;">${{ order.tax_amount }}</td>
+        </tr>
+        <tr style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">
+          <td colspan="3" style="padding-top: 12px; text-align: right;">Total Amount:</td>
+          <td style="padding-top: 12px; text-align: right;">${{ order.total_amount }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;">
+      <a href="{% url 'accounts:orders_history' %}" class="btn-secondary" style="padding: 10px 20px; font-size: 0.9rem;">
+        &larr; Back to Orders
+      </a>
+      <button type="button" onclick="window.print()" class="user-btn">
+        🖨️ Print
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

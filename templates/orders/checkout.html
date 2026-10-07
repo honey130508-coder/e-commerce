@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - ApexStore{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{% url 'store:product_list' %}">Home</a>
+    <span>/</span>
+    <a href="{% url 'store:cart_detail' %}">Cart</a>
+    <span>/</span>
+    <span style="color: var(--text-main); font-weight: 500;">Checkout</span>
+  </nav>
+
+  <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px;">
+    Checkout &amp; Order Processing
+  </h1>
+
+  <form action="{% url 'orders:checkout' %}" method="POST" id="checkout-form">
+    {% csrf_token %}
+
+    <div class="checkout-layout">
+      <!-- Left Column: Shipping & Payment -->
+      <div>
+        <!-- Shipping Address Card -->
+        <div class="checkout-card">
+          <h2 class="checkout-heading">
+            <span>📍</span> Shipping Information
+          </h2>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label" for="{{ form.full_name.id_for_label }}">Full Name *</label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}
+                <span class="form-error">{{ form.full_name.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.email.id_for_label }}">Email Address *</label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <span class="form-error">{{ form.email.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number *</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <span class="form-error">{{ form.phone.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label" for="{{ form.address.id_for_label }}">Street Address *</label>
+              {{ form.address }}
+              {% if form.address.errors %}
+                <span class="form-error">{{ form.address.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.city.id_for_label }}">City *</label>
+              {{ form.city }}
+              {% if form.city.errors %}
+                <span class="form-error">{{ form.city.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.state.id_for_label }}">State / Province</label>
+              {{ form.state }}
+              {% if form.state.errors %}
+                <span class="form-error">{{ form.state.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.postal_code.id_for_label }}">Postal / ZIP Code *</label>
+              {{ form.postal_code }}
+              {% if form.postal_code.errors %}
+                <span class="form-error">{{ form.postal_code.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="{{ form.country.id_for_label }}">Country *</label>
+              {{ form.country }}
+              {% if form.country.errors %}
+                <span class="form-error">{{ form.country.errors.0 }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method Card -->
+        <div class="checkout-card">
+          <h2 class="checkout-heading">
+            <span>💳</span> Payment Method
+          </h2>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+            Select your preferred method of payment. All transactions are simulated for this demonstration.
+          </p>
+
+          <div class="payment-options">
+            <label class="payment-option-card selected">
+              <input type="radio" name="payment_method" value="Credit Card (Simulation)" checked style="accent-color: var(--primary);">
+              <div>
+                <strong>💳 Credit or Debit Card</strong>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">Instant test payment (Visa, Mastercard, Amex)</div>
+              </div>
+            </label>
+
+            <label class="payment-option-card">
+              <input type="radio" name="payment_method" value="Cash on Delivery" style="accent-color: var(--primary);">
+              <div>
+                <strong>💵 Cash on Delivery (COD)</strong>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">Pay with cash upon receipt of order</div>
+              </div>
+            </label>
+
+            <label class="payment-option-card">
+              <input type="radio" name="payment_method" value="PayPal (Simulation)" style="accent-color: var(--primary);">
+              <div>
+                <strong>🅿️ PayPal Checkout</strong>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">Simulated digital wallet payment</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Order Summary Review -->
+      <div>
+        <div class="summary-card" style="position: sticky; top: 96px;">
+          <h2 class="summary-title">Order Review</h2>
+
+          <!-- Mini Item List -->
+          <div style="max-height: 260px; overflow-y: auto; margin-bottom: 20px; padding-right: 8px;">
+            {% for item in cart_items %}
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+                <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover;">
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ item.product.name }}
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Qty: {{ item.quantity }} &times; ${{ item.product.price }}
+                  </div>
+                </div>
+                <div style="font-weight: 700; font-size: 0.95rem;">
+                  ${{ item.get_subtotal }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>${{ cart.get_subtotal }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span>
+              {% if cart.get_shipping == 0 %}
+                <span class="free-ship-badge">FREE</span>
+              {% else %}
+                ${{ cart.get_shipping }}
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="summary-row">
+            <span>Tax (8%)</span>
+            <span>${{ cart.get_tax }}</span>
+          </div>
+
+          <div class="summary-row total-row">
+            <span>Total to Pay</span>
+            <span style="color: var(--primary);">${{ cart.get_grand_total }}</span>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              <span>🔒</span> Place Order (${{ cart.get_grand_total }})
+            </button>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 0.82rem; color: var(--text-muted); text-align: center;">
+            By placing your order, you agree to our Terms of Service &amp; Privacy Policy.
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

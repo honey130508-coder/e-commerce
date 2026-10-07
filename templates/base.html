@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ApexStore - Premium Modern E-Commerce{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-top">
+        <!-- Logo -->
+        <a href="{% url 'store:product_list' %}" class="brand-logo">
+          <div class="logo-icon">⚡</div>
+          <div>Apex<span class="logo-highlight">Store</span></div>
+        </a>
+
+        <!-- Search Bar -->
+        <form action="{% url 'store:product_list' %}" method="GET" class="search-form">
+          <div class="search-input-wrapper">
+            <input 
+              type="text" 
+              name="q" 
+              placeholder="Search products, brands, categories..." 
+              value="{{ request.GET.q|default:'' }}" 
+              class="search-input"
+            >
+            <button type="submit" class="search-btn" title="Search">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Actions (Cart & User) -->
+        <div class="header-actions">
+          <!-- User Dropdown -->
+          {% if user.is_authenticated %}
+            <div class="user-menu">
+              <button class="user-btn" type="button">
+                <span>👤</span>
+                <span>{{ user.first_name|default:user.username }}</span>
+                <span style="font-size: 0.75rem;">▼</span>
+              </button>
+              <div class="dropdown-menu">
+                <a href="{% url 'accounts:orders_history' %}" class="dropdown-item">
+                  <span>📦</span> My Orders
+                </a>
+                {% if user.is_staff %}
+                  <a href="{% url 'admin:index' %}" class="dropdown-item" target="_blank">
+                    <span>⚙️</span> Admin Dashboard
+                  </a>
+                {% endif %}
+                <div class="dropdown-divider"></div>
+                <form action="{% url 'accounts:logout' %}" method="POST" style="margin: 0;">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer;">
+                    <span>🚪</span> Sign Out
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'accounts:login' %}" class="user-btn">
+              <span>👤</span> Sign In
+            </a>
+            <a href="{% url 'accounts:register' %}" class="btn-primary" style="padding: 8px 16px; font-size: 0.88rem;">
+              Register
+            </a>
+          {% endif %}
+
+          <!-- Shopping Cart Icon/Badge -->
+          <a href="{% url 'store:cart_detail' %}" class="cart-btn" title="View Cart">
+            <span>🛒</span>
+            <span>Cart</span>
+            <span class="cart-badge">{{ cart_total_items|default:0 }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Shortcuts Bar -->
+    <div class="categories-bar">
+      <div class="container">
+        <ul class="categories-list">
+          <li>
+            <a href="{% url 'store:product_list' %}" class="cat-pill {% if not current_category %}active{% endif %}">
+              ✨ All Products
+            </a>
+          </li>
+          {% for cat in all_categories %}
+            <li>
+              <a href="{{ cat.get_absolute_url }}" class="cat-pill {% if current_category and current_category.slug == cat.slug %}active{% endif %}">
+                {{ cat.icon }} {{ cat.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Messages / Alerts -->
+  <div class="container">
+    {% if messages %}
+      <div class="alerts-container">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }}">
+            <span>{{ message }}</span>
+            <button type="button" class="alert-close">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-title">⚡ ApexStore</div>
+          <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">
+            Your modern e-commerce destination for curated lifestyle tech, apparel, and home essentials. Fast delivery and secure payments guaranteed.
+          </p>
+          <div style="font-size: 0.85rem; color: #64748b;">
+            Built with Django, HTML5, CSS3, &amp; JavaScript.
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Categories</h4>
+          <ul class="footer-links">
+            {% for cat in all_categories|slice:":4" %}
+              <li><a href="{{ cat.get_absolute_url }}">{{ cat.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Customer Care</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'store:cart_detail' %}">Shopping Cart</a></li>
+            <li><a href="{% url 'accounts:orders_history' %}">Track My Orders</a></li>
+            <li><a href="#">Shipping &amp; Returns</a></li>
+            <li><a href="#">FAQ &amp; Support</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Account</h4>
+          <ul class="footer-links">
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'accounts:orders_history' %}">My Account</a></li>
+              <li><a href="{% url 'accounts:orders_history' %}">Order History</a></li>
+            {% else %}
+              <li><a href="{% url 'accounts:login' %}">Sign In</a></li>
+              <li><a href="{% url 'accounts:register' %}">Create Account</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        &copy; 2026 ApexStore Inc. All rights reserved. Secure encrypted checkout.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

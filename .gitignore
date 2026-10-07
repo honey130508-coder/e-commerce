@@ -1,0 +1,30 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local SQLite Database (exclude or comment out if you want to include pre-seeded db)
+*.sqlite3
+db.sqlite3
+
+# Static files collected
+staticfiles/
+
+# Media files
+media/
+
+# Environment variables
+.env
+.env.local
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

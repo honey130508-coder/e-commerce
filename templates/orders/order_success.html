@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Confirmed #{{ order.order_number }} - ApexStore{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="success-card">
+    <div class="success-icon-box">✓</div>
+    <h1 class="success-title">Thank you for your order!</h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 16px;">
+      Your order has been received and is being prepared for dispatch.
+    </p>
+
+    <div>
+      <span class="order-badge-pill">Order #{{ order.order_number }}</span>
+      <span class="status-pill status-{{ order.status|lower }}">{{ order.status }}</span>
+    </div>
+
+    <!-- Details Box -->
+    <div class="success-details">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div>
+          <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">
+            Shipping Address
+          </div>
+          <div style="font-weight: 600; margin-top: 4px;">{{ order.full_name }}</div>
+          <div style="font-size: 0.9rem; color: var(--text-muted);">
+            {{ order.address }}<br>
+            {{ order.city }}, {{ order.state }} {{ order.postal_code }}<br>
+            {{ order.country }}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">
+            Order Information
+          </div>
+          <div style="font-size: 0.9rem; margin-top: 4px;">
+            <strong>Date:</strong> {{ order.created_at|date:"M d, Y, g:i a" }}<br>
+            <strong>Email:</strong> {{ order.email }}<br>
+            <strong>Payment:</strong> {{ order.payment_method }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border-color); text-align: left; font-size: 0.82rem; color: var(--text-muted);">
+            <th style="padding: 8px 0;">Item</th>
+            <th style="padding: 8px; text-align: center;">Qty</th>
+            <th style="padding: 8px 0; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items.all %}
+            <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.92rem;">
+              <td style="padding: 10px 0; font-weight: 600;">{{ item.product_name }}</td>
+              <td style="padding: 10px; text-align: center;">{{ item.quantity }}</td>
+              <td style="padding: 10px 0; text-align: right; font-weight: 700;">${{ item.line_total }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding-top: 12px; color: var(--text-muted); text-align: right; font-size: 0.9rem;">Subtotal:</td>
+            <td style="padding-top: 12px; text-align: right; font-weight: 600;">${{ order.subtotal }}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding-top: 4px; color: var(--text-muted); text-align: right; font-size: 0.9rem;">Shipping:</td>
+            <td style="padding-top: 4px; text-align: right; font-weight: 600;">
+              {% if order.shipping_cost == 0 %}FREE{% else %}${{ order.shipping_cost }}{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding-top: 4px; color: var(--text-muted); text-align: right; font-size: 0.9rem;">Estimated Tax:</td>
+            <td style="padding-top: 4px; text-align: right; font-weight: 600;">${{ order.tax_amount }}</td>
+          </tr>
+          <tr style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">
+            <td colspan="2" style="padding-top: 10px; text-align: right;">Total:</td>
+            <td style="padding-top: 10px; text-align: right;">${{ order.total_amount }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+      <a href="{% url 'store:product_list' %}" class="btn-primary">
+        Continue Shopping
+      </a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'accounts:orders_history' %}" class="btn-secondary">
+          View All Orders
+        </a>
+      {% endif %}
+      <button type="button" onclick="window.print()" class="user-btn" style="padding: 12px 20px;">
+        🖨️ Print Receipt
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

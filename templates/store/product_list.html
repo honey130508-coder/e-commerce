@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if current_category %}{{ current_category.name }} - ApexStore{% elif query %}Search: {{ query }} - ApexStore{% else %}ApexStore - Premium Modern Shop{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Promo Hero Section (shown on main shop page) -->
+  {% if not current_category and not query %}
+    <section class="hero-section">
+      <div class="hero-content">
+        <span class="hero-tag">New Season Arrival</span>
+        <h1 class="hero-title">Elevate Your Everyday Essentials.</h1>
+        <p class="hero-subtitle">
+          Discover handpicked tech gear, premium streetwear, and minimalist home decor designed to enhance your lifestyle.
+        </p>
+        <a href="#product-catalog" class="hero-cta">
+          Explore Products <span>→</span>
+        </a>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- Catalog Section -->
+  <section id="product-catalog" style="padding: 24px 0;">
+    <div class="catalog-header">
+      <div>
+        <h2 class="catalog-title">
+          {% if current_category %}
+            {{ current_category.icon }} {{ current_category.name }}
+          {% elif query %}
+            Search results for &ldquo;{{ query }}&rdquo;
+          {% else %}
+            Curated Products
+          {% endif %}
+          <span class="catalog-count">({{ total_count }} item{{ total_count|pluralize }})</span>
+        </h2>
+        {% if current_category and current_category.description %}
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">{{ current_category.description }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Sorting Controls -->
+      <form method="GET" id="sort-form" style="display: flex; align-items: center; gap: 8px;">
+        {% if query %}
+          <input type="hidden" name="q" value="{{ query }}">
+        {% endif %}
+        <label for="sort-select" style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);">Sort By:</label>
+        <select name="sort" id="sort-select" class="sort-select" onchange="this.form.submit()">
+          <option value="" {% if not sort_by %}selected{% endif %}>Featured</option>
+          <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+          <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Customer Rating</option>
+          <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Product Grid -->
+    {% if products %}
+      <div class="product-grid">
+        {% for product in products %}
+          <div class="product-card">
+            <!-- Product Image -->
+            <a href="{{ product.get_absolute_url }}" class="product-img-wrapper">
+              <img src="{{ product.get_image }}" alt="{{ product.name }}" class="product-img" loading="lazy">
+              {% if product.is_featured %}
+                <span class="product-badge-featured">Featured</span>
+              {% endif %}
+            </a>
+
+            <!-- Product Details -->
+            <div class="product-card-body">
+              <div class="product-cat">{{ product.category.name }}</div>
+              <h3 class="product-name">
+                <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+              </h3>
+
+              <div class="product-rating">
+                <span class="rating-star">★</span>
+                <span><strong>{{ product.rating }}</strong></span>
+                <span>({{ product.rating_count }})</span>
+              </div>
+
+              <!-- Price & CTA -->
+              <div class="product-card-footer">
+                <div class="product-price">${{ product.price }}</div>
+
+                {% if product.is_in_stock %}
+                  <button 
+                    type="button"
+                    class="btn-add-cart btn-add-cart-ajax" 
+                    data-url="{% url 'store:cart_add' product.id %}"
+                    title="Add to Cart"
+                  >
+                    <span>+ Add</span>
+                  </button>
+                {% else %}
+                  <button type="button" class="btn-add-cart btn-out-stock" disabled>
+                    Sold Out
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3 class="empty-state-title">No products found</h3>
+        <p class="empty-state-desc">
+          {% if query %}
+            We couldn't find any products matching &ldquo;{{ query }}&rdquo;. Try searching with different keywords.
+          {% else %}
+            No products are currently available in this category. Check back soon!
+          {% endif %}
+        </p>
+        <a href="{% url 'store:product_list' %}" class="btn-primary">
+          Browse All Products
+        </a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

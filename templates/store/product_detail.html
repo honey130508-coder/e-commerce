@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - ApexStore{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{% url 'store:product_list' %}">Home</a>
+    <span>/</span>
+    <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+    <span>/</span>
+    <span style="color: var(--text-main); font-weight: 500;">{{ product.name }}</span>
+  </nav>
+
+  <!-- Product Detail Section -->
+  <div class="product-detail-layout">
+    <!-- Image Column -->
+    <div class="detail-img-container">
+      <img src="{{ product.get_image }}" alt="{{ product.name }}" class="detail-img">
+    </div>
+
+    <!-- Product Info Column -->
+    <div class="detail-info">
+      <a href="{{ product.category.get_absolute_url }}" class="detail-cat-badge">
+        {{ product.category.icon }} {{ product.category.name }}
+      </a>
+
+      <h1 class="detail-title">{{ product.name }}</h1>
+
+      <div class="detail-meta">
+        <div class="product-rating" style="margin-bottom: 0;">
+          <span class="rating-star" style="font-size: 1.1rem;">★</span>
+          <span><strong>{{ product.rating }}</strong></span>
+          <span>({{ product.rating_count }} customer reviews)</span>
+        </div>
+
+        {% if product.is_in_stock %}
+          <span class="stock-tag in-stock">
+            <span>●</span> In Stock ({{ product.stock }} available)
+          </span>
+        {% else %}
+          <span class="stock-tag out-stock">
+            <span>●</span> Out of Stock
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="detail-price">${{ product.price }}</div>
+
+      <p class="detail-desc">
+        {{ product.description }}
+      </p>
+
+      {% if product.is_in_stock %}
+        <form action="{% url 'store:cart_add' product.id %}" method="POST" class="detail-actions-form">
+          {% csrf_token %}
+          <div class="qty-control-wrapper">
+            <span class="qty-label">Quantity:</span>
+            <div class="qty-group">
+              <button type="button" class="qty-btn" id="btn-qty-minus">&minus;</button>
+              <input 
+                type="number" 
+                name="quantity" 
+                id="detail-qty-input" 
+                class="qty-input" 
+                value="1" 
+                min="1" 
+                max="{{ product.stock }}"
+              >
+              <button type="button" class="qty-btn" id="btn-qty-plus">&plus;</button>
+            </div>
+          </div>
+
+          <div class="detail-buttons">
+            <button type="submit" class="btn-primary" style="flex: 1;">
+              <span>🛒</span> Add to Cart
+            </button>
+            <button 
+              type="submit" 
+              name="buy_now" 
+              value="true" 
+              class="btn-secondary" 
+              style="flex: 1;"
+              onclick="this.form.action='{% url 'store:cart_add' product.id %}?next={% url 'orders:checkout' %}'"
+            >
+              <span>⚡</span> Buy Now
+            </button>
+          </div>
+        </form>
+      {% else %}
+        <div class="alert alert-warning" style="margin-top: 10px;">
+          This item is currently out of stock. Please check back later!
+        </div>
+      {% endif %}
+
+      <!-- Trust Badges -->
+      <div class="features-box">
+        <div class="feature-item">
+          <span class="feature-icon">🚚</span>
+          <span>Free shipping over $100</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🔄</span>
+          <span>30-day hassle-free return</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🛡️</span>
+          <span>2-year warranty included</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products Section -->
+  {% if related_products %}
+    <section style="margin: 48px 0 64px;">
+      <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px;">
+        You Might Also Like
+      </h3>
+      <div class="product-grid">
+        {% for rel_prod in related_products %}
+          <div class="product-card">
+            <a href="{{ rel_prod.get_absolute_url }}" class="product-img-wrapper">
+              <img src="{{ rel_prod.get_image }}" alt="{{ rel_prod.name }}" class="product-img" loading="lazy">
+            </a>
+            <div class="product-card-body">
+              <div class="product-cat">{{ rel_prod.category.name }}</div>
+              <h4 class="product-name">
+                <a href="{{ rel_prod.get_absolute_url }}">{{ rel_prod.name }}</a>
+              </h4>
+              <div class="product-card-footer">
+                <div class="product-price">${{ rel_prod.price }}</div>
+                <a href="{{ rel_prod.get_absolute_url }}" class="btn-add-cart" style="background: #f1f5f9; color: var(--text-main);">
+                  View
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

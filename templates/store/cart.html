@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - ApexStore{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{% url 'store:product_list' %}">Home</a>
+    <span>/</span>
+    <span style="color: var(--text-main); font-weight: 500;">Shopping Cart</span>
+  </nav>
+
+  <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px;">
+    Shopping Cart
+    {% if cart.items.count > 0 %}
+      <span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">
+        ({{ cart.get_total_items }} item{{ cart.get_total_items|pluralize }})
+      </span>
+    {% endif %}
+  </h1>
+
+  {% if cart.items.all %}
+    <div class="cart-layout">
+      <!-- Items Table Card -->
+      <div class="cart-items-card">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cart.items.all %}
+              <tr id="cart-row-{{ item.id }}">
+                <!-- Product Info -->
+                <td>
+                  <div class="cart-product-info">
+                    <a href="{{ item.product.get_absolute_url }}">
+                      <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}" class="cart-thumb">
+                    </a>
+                    <div>
+                      <span class="cart-item-cat">{{ item.product.category.name }}</span>
+                      <a href="{{ item.product.get_absolute_url }}" class="cart-item-title">
+                        {{ item.product.name }}
+                      </a>
+                      <button 
+                        type="button" 
+                        class="cart-btn-remove cart-btn-remove-ajax" 
+                        data-item-id="{{ item.id }}"
+                        data-url="{% url 'store:cart_remove' item.id %}"
+                      >
+                        🗑️ Remove
+                      </button>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Unit Price -->
+                <td style="font-weight: 600; color: var(--text-muted);">
+                  ${{ item.product.price }}
+                </td>
+
+                <!-- Quantity Controls -->
+                <td>
+                  <div class="qty-group">
+                    <button 
+                      type="button" 
+                      class="qty-btn cart-qty-btn" 
+                      data-action="decrease" 
+                      data-item-id="{{ item.id }}"
+                      data-url="{% url 'store:cart_update' item.id %}"
+                    >&minus;</button>
+                    <span class="cart-item-qty" style="padding: 0 12px; font-weight: 700; font-size: 0.95rem;">
+                      {{ item.quantity }}
+                    </span>
+                    <button 
+                      type="button" 
+                      class="qty-btn cart-qty-btn" 
+                      data-action="increase" 
+                      data-item-id="{{ item.id }}"
+                      data-url="{% url 'store:cart_update' item.id %}"
+                    >&plus;</button>
+                  </div>
+                </td>
+
+                <!-- Subtotal -->
+                <td style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">
+                  <span class="cart-item-subtotal">${{ item.get_subtotal }}</span>
+                </td>
+
+                <!-- Remove Icon -->
+                <td>
+                  <form action="{% url 'store:cart_remove' item.id %}" method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Remove item">
+                      ✕
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div style="padding: 16px 20px; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <a href="{% url 'store:product_list' %}" style="font-weight: 600; color: var(--primary); font-size: 0.92rem;">
+            &larr; Continue Shopping
+          </a>
+        </div>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="summary-card">
+        <h2 class="summary-title">Order Summary</h2>
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <strong id="summary-subtotal">${{ cart.get_subtotal }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Estimated Shipping</span>
+          <span id="summary-shipping">
+            {% if cart.get_shipping == 0 %}
+              <span class="free-ship-badge">FREE</span>
+            {% else %}
+              ${{ cart.get_shipping }}
+            {% endif %}
+          </span>
+        </div>
+
+        {% if cart.get_subtotal < 100 and cart.get_subtotal > 0 %}
+          <div style="font-size: 0.8rem; color: var(--primary); background: var(--primary-light); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 12px;">
+            💡 Add <strong>${{ 100|add:"-0" }}</strong> more to unlock <strong>FREE Shipping</strong>!
+          </div>
+        {% endif %}
+
+        <div class="summary-row">
+          <span>Estimated Tax (8%)</span>
+          <span id="summary-tax">${{ cart.get_tax }}</span>
+        </div>
+
+        <div class="summary-row total-row">
+          <span>Grand Total</span>
+          <span id="summary-grandtotal" style="color: var(--primary);">${{ cart.get_grand_total }}</span>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <a href="{% url 'orders:checkout' %}" class="btn-primary" style="width: 100%; text-align: center; box-sizing: border-box;">
+            Proceed to Checkout &rarr;
+          </a>
+        </div>
+
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 0.82rem; color: var(--text-muted); text-align: center;">
+          🔒 Secure 256-bit SSL encrypted checkout
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- Empty Cart State -->
+    <div class="empty-state">
+      <div class="empty-state-icon">🛒</div>
+      <h2 class="empty-state-title">Your shopping cart is empty</h2>
+      <p class="empty-state-desc">
+        Looks like you haven't added anything to your cart yet. Explore our latest arrivals and top-rated products!
+      </p>
+      <a href="{% url 'store:product_list' %}" class="btn-primary">
+        Start Shopping Now
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
