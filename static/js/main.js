@@ -3,20 +3,24 @@
  * Handles dynamic cart operations, toast alerts, and UI interactions
  */
 
-// Utility: get CSRF token from cookies
-function getCookie(name) {
-  let cookieValue = null;
+// Robust CSRF token extractor: checks meta tag, hidden input, then cookies
+function getCsrfToken() {
+  const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (metaToken && metaToken !== 'None') return metaToken;
+
+  const inputToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+  if (inputToken) return inputToken;
+
   if (document.cookie && document.cookie !== '') {
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
+      if (cookie.substring(0, 10) === 'csrftoken=') {
+        return decodeURIComponent(cookie.substring(10));
       }
     }
   }
-  return cookieValue;
+  return '';
 }
 
 // Toast notification helper
@@ -68,8 +72,6 @@ function updateCartBadge(count) {
 
 // Initialize listeners on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  const csrftoken = getCookie('csrftoken');
-
   // Auto-dismiss alerts
   document.querySelectorAll('.alert-close').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -94,14 +96,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('quantity', '1');
 
+        const token = getCsrfToken();
+        const headers = {
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (token) {
+          headers['X-CSRFToken'] = token;
+        }
+
         const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'X-CSRFToken': csrftoken,
-            'X-Requested-With': 'XMLHttpRequest'
-          },
+          headers: headers,
           body: formData
         });
+
+        if (!response.ok) {
+          let errorMsg = 'Could not add item to cart.';
+          try {
+            const errData = await response.json();
+            if (errData && errData.message) errorMsg = errData.message;
+          } catch (_) {
+            errorMsg = `Server response (${response.status}). Please try again.`;
+          }
+          showToast(errorMsg, 'error');
+          return;
+        }
 
         const data = await response.json();
         if (data.success) {
@@ -112,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         console.error('Add to cart error:', err);
-        showToast('Something went wrong. Please try again.', 'error');
+        showToast('Something went wrong. Please refresh and try again.', 'error');
       } finally {
         button.disabled = false;
         button.innerHTML = originalText;
@@ -159,14 +178,22 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('action', action);
 
       try {
+        const token = getCsrfToken();
+        const headers = {
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (token) headers['X-CSRFToken'] = token;
+
         const response = await fetch(updateUrl, {
           method: 'POST',
-          headers: {
-            'X-CSRFToken': csrftoken,
-            'X-Requested-With': 'XMLHttpRequest'
-          },
+          headers: headers,
           body: formData
         });
+
+        if (!response.ok) {
+          showToast('Failed to update cart.', 'error');
+          return;
+        }
 
         const data = await response.json();
         if (data.success) {
@@ -212,13 +239,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = document.querySelector(`#cart-row-${itemId}`);
 
       try {
+        const token = getCsrfToken();
+        const headers = {
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (token) headers['X-CSRFToken'] = token;
+
         const response = await fetch(removeUrl, {
           method: 'POST',
-          headers: {
-            'X-CSRFToken': csrftoken,
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+          headers: headers
         });
+
+        if (!response.ok) {
+          showToast('Failed to remove item.', 'error');
+          return;
+        }
 
         const data = await response.json();
         if (data.success) {

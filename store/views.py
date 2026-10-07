@@ -3,11 +3,21 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Category, Product, Cart, CartItem
 from .cart_utils import get_or_create_cart
 
 
+@ensure_csrf_cookie
 def product_list(request, category_slug=None):
+    # Auto-seed sample catalog if database is empty on fresh cloud deploy
+    if not Product.objects.exists():
+        try:
+            from django.core.management import call_command
+            call_command('seed_products')
+        except Exception:
+            pass
+
     category = None
     products = Product.objects.all()
 
@@ -43,6 +53,7 @@ def product_list(request, category_slug=None):
     return render(request, 'store/product_list.html', context)
 
 
+@ensure_csrf_cookie
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
     related_products = Product.objects.filter(
@@ -56,6 +67,7 @@ def product_detail(request, slug):
     return render(request, 'store/product_detail.html', context)
 
 
+@ensure_csrf_cookie
 def cart_detail(request):
     cart = get_or_create_cart(request)
     context = {

@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}ApexStore - Premium Modern E-Commerce{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +13,7 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" id="global-csrf-token">
 
   <!-- Header Navigation -->
   <header class="site-header">

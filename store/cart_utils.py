@@ -6,7 +6,7 @@ def get_or_create_cart(request):
     If the user has logged in, any anonymous session cart is merged into the user's cart.
     """
     if not request.session.session_key:
-        request.session.save()
+        request.session.create()
     session_key = request.session.session_key
 
     if request.user.is_authenticated:
